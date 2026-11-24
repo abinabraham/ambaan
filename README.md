@@ -88,13 +88,13 @@ All endpoints are under `/api/`. Interactive docs: `/api/docs/`, OpenAPI schema:
 ## Deployment
 
 ```
-app.ambaan.com  ->  Cloudflare Pages  (frontend/, static React build)
-api.ambaan.com  ->  Render            (backend/, Django + gunicorn)
-                    Supabase          (PostgreSQL + private "receipts" Storage bucket)
+https://ambaan-web.pages.dev      ->  Cloudflare Pages  (frontend/, static React build)
+https://ambaan-api.onrender.com   ->  Render            (backend/, Django + gunicorn, Singapore)
+                                      Supabase          (PostgreSQL + private "receipts" Storage bucket, ap-northeast-2)
 ```
 
 ### 1. Supabase
-1. Create a project (region close to Render's Frankfurt, e.g. `eu-central-1`).
+1. Create a project. Keep it close to the Render region in `render.yaml`.
 2. **Connect → Session pooler**: copy the URI, insert the database password and append `?sslmode=require`.
    This is `DATABASE_URL`. Use the session pooler (IPv4), not the direct connection, which is IPv6-only.
 3. **Project Settings → API**: copy the Project URL (`SUPABASE_URL`) and the `service_role` key
@@ -108,7 +108,6 @@ api.ambaan.com  ->  Render            (backend/, Django + gunicorn)
    `DJANGO_SUPERUSER_PASSWORD` (the admin login for `DJANGO_SUPERUSER_EMAIL`).
 4. `build.sh` installs dependencies, runs migrations, creates the Storage bucket and the admin user.
    Health check: `/health/`. Recurring items are processed for each user when they open the app.
-5. Settings → Custom Domains: `api.ambaan.com` (declared in `render.yaml`); note the `*.onrender.com` target.
 
 ### 3. Cloudflare Pages (frontend)
 Either connect the GitHub repo (Workers & Pages → Create → Pages → Connect to Git; root directory `frontend`,
@@ -121,17 +120,20 @@ npx wrangler pages project create ambaan-web --production-branch main
 npm run build && npx wrangler pages deploy dist
 ```
 
-`.env.production` points the build at `https://api.ambaan.com/api`; `public/_redirects` handles SPA routing.
-Then Custom domains → add `app.ambaan.com`.
+`.env.production` points the build at `https://ambaan-api.onrender.com/api`; `public/_redirects` handles SPA routing.
+Redeploy with `npm run deploy`.
 
-### 4. DNS
-| Name  | Type  | Target                       |
-|-------|-------|------------------------------|
-| `app` | CNAME | `ambaan-web.pages.dev`       |
-| `api` | CNAME | `ambaan-api.onrender.com`    |
+### 4. Custom domain (optional)
+With a domain you own on Cloudflare DNS, e.g. `example.com`:
 
-If DNS stays at the current registrar, Cloudflare Pages requires the custom domain to be verified via the
-CNAME above; moving the zone to Cloudflare makes `app` automatic. Use the exact targets shown by each dashboard.
+| Name  | Type  | Target                    | Proxy    |
+|-------|-------|---------------------------|----------|
+| `app` | CNAME | `ambaan-web.pages.dev`    | Proxied  |
+| `api` | CNAME | `ambaan-api.onrender.com` | DNS only |
+
+Then add `app.example.com` under the Pages project's Custom domains and `api.example.com` under the Render
+service's Custom Domains, update `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` in
+`render.yaml` and `VITE_API_URL` in `frontend/.env.production`.
 
 ## Roadmap
 - React Native mobile app reusing `src/api` types and hooks.

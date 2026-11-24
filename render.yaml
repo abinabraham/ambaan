@@ -8,8 +8,6 @@ services:
     buildCommand: ./build.sh
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60
     healthCheckPath: /health/
-    domains:
-      - api.ambaan.com
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.3
@@ -18,11 +16,11 @@ services:
       - key: DJANGO_DEBUG
         value: "False"
       - key: DJANGO_ALLOWED_HOSTS
-        value: api.ambaan.com
+        value: ambaan-api.onrender.com
       - key: CORS_ALLOWED_ORIGINS
-        value: https://app.ambaan.com
+        value: https://ambaan-web.pages.dev
       - key: CSRF_TRUSTED_ORIGINS
-        value: https://api.ambaan.com,https://app.ambaan.com
+        value: https://ambaan-api.onrender.com,https://ambaan-web.pages.dev
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL
