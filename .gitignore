@@ -8,6 +8,7 @@ backend/media/
 backend/staticfiles/
 .env
 !.env.example
+deploy.secrets.env
 
 # Node
 node_modules/
